@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MerchAi — загрузка и предпросмотр</title>
+  <style>
+    :root{
+      --bg:#0b0f14;--panel:#111824;--text:#e8eef7;--muted:#9fb1c8;--accent:#4fd1ff;--danger:#ff6b6b;--ok:#3be779;--br:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#0d1422,#0b0f14);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px;display:grid;gap:24px}
+    header{display:flex;align-items:center;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:20px}
+    .logo__mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1e90ff,#00d4ff);display:grid;place-items:center;color:#001221;font-weight:900}
+    .panel{background:var(--panel);border:1px solid rgba(255,255,255,.07);border-radius:var(--br);padding:18px 16px}
+    .panel h2{margin:0 0 8px;font-size:18px}
+    .sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    @media(max-width:920px){.grid{grid-template-columns:1fr}}
+
+    .drop{border:1px dashed rgba(255,255,255,.18);padding:16px;border-radius:12px;display:grid;gap:10px;place-items:center;text-align:center;background:rgba(255,255,255,.02)}
+    .drop button{background:transparent;border:1px solid rgba(255,255,255,.2);color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer}
+    .drop button:hover{border-color:var(--accent)}
+    .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-top:14px}
+    .thumb{position:relative;background:#0e141f;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer}
+    .thumb__bar{position:absolute;inset:auto 0 0 0;background:linear-gradient(180deg,transparent,rgba(0,0,0,.7));padding:6px 8px;display:flex;justify-content:space-between;gap:6px;align-items:center}
+    .thumb__name{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+    .thumb__x{border:none;background:rgba(0,0,0,.5);color:#fff;border-radius:8px;padding:3px 6px;cursor:pointer}
+    .thumb__x:hover{background:rgba(0,0,0,.8)}
+    .foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:13px;color:var(--muted)}
+    .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.15)}
+    .btn{border:1px solid rgba(255,255,255,.2);color:var(--text);background:transparent;padding:10px 14px;border-radius:10px;cursor:pointer}
+    .btn:hover{border-color:var(--accent)}
+
+    /* Viewer */
+    .viewer{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;place-items:center;padding:20px;z-index:50}
+    .viewer img{max-width:95vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.6)}
+    .viewer.show{display:grid}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo"><div class="logo__mark">M</div> MerchAi</div>
+      <div class="sub">Модуль загрузки данных • без логики бэкенда</div>
+    </header>
+
+    <div class="grid">
+      <!-- TRAINER -->
+      <section class="panel" id="trainer">
+        <h2>Обучение модели</h2>
+        <p class="sub">Выберите изображения товара (от 1 до 10 штук). Они никуда не отправляются — только предпросмотр в браузере.</p>
+        <div class="drop" id="train-drop">
+          <input type="file" id="train-input" accept="image/*" multiple hidden>
+          <button type="button" id="train-choose">Выбрать файлы</button>
+          <div class="sub">или перетащите сюда</div>
+        </div>
+        <div class="thumbs" id="train-thumbs"></div>
+        <div class="foot">
+          <span><span id="train-count">0</span>/10</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="train-clear">Очистить</button>
+            <button class="btn" title="Заглушка без логики">Обучить (заглушка)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- FINDER -->
+      <section class="panel" id="finder">
+        <h2>Поиск по фотографии</h2>
+        <p class="sub">Введите название и добавьте 1 фото для поиска (предпросмотр в браузере).</p>
+        <div style="display:grid;gap:10px;margin-bottom:8px">
+          <input id="find-name" placeholder="Например: Coca-Cola 0.5" style="background:#0e141f;border:1px solid rgba(255,255,255,.12);border-radius:10px;color:var(--text);padding:10px 12px" />
+        </div>
+        <div class="drop" id="find-drop">
+          <input type="file" id="find-input" accept="image/*" hidden>
+          <button type="button" id="find-choose">Выбрать фото</button>
+          <div class="sub">или перетащите сюда</div>
+        </div>
+        <div class="thumbs" id="find-thumbs"></div>
+        <div class="foot">
+          <span class="pill">Фото: <span id="find-count">0</span>/1</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="find-clear">Удалить фото</button>
+            <button class="btn" title="Заглушка без логики">Искать (заглушка)</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- === script.js (вынести при желании) === -->
+  <script>
+    // ====== Вспомогательные ======
+    const makeURL = (file) => URL.createObjectURL(file);
+    const revokeOnImgLoad = (img, url) => img.addEventListener('load', () => URL.revokeObjectURL(url), {once:true});
+
+    // ====== TRAINER state & UI ======
+    const trainInput = document.getElementById('train-input');
+    const trainChoose = document.getElementById('train-choose');
+    const trainDrop = document.getElementById('train-drop');
+    const trainThumbs = document.getElementById('train-thumbs');
+    const trainCount = document.getElementById('train-count');
+    const trainClear = document.getElementById('train-clear');
+
+    /** @type {File[]} */
+    let trainFiles = [];
+
+    function addTrainFiles(list){
+      const incoming = Array.from(list).filter(f => f.type.startsWith('image/'));
+      const room = Math.max(0, 10 - trainFiles.length);
+      if (room === 0) return;
+      trainFiles = trainFiles.concat(incoming.slice(0, room));
+      renderTrain();
+    }
+
+    function removeTrainAt(i){ trainFiles.splice(i,1); renderTrain(); }
+    function clearTrain(){ trainFiles = []; renderTrain(); }
+
+    function renderTrain(){
+      trainThumbs.innerHTML = '';
+      trainFiles.forEach((file, i) => {
+        const wrap = document.createElement('div'); wrap.className = 'thumb';
+        const img = document.createElement('img'); const url = makeURL(file); img.src = url; revokeOnImgLoad(img, url);
+        img.title = file.name; img.onclick = () => openViewer(url);
+        const bar = document.createElement('div'); bar.className = 'thumb__bar';
+        const name = document.createElement('div'); name.className='thumb__name'; name.textContent = file.name;
+        const x = document.createElement('button'); x.className='thumb__x'; x.textContent='×'; x.title='Удалить'; x.onclick = () => removeTrainAt(i);
+        bar.appendChild(name); bar.appendChild(x);
+        wrap.appendChild(img); wrap.appendChild(bar);
+        trainThumbs.appendChild(wrap);
+      });
+      trainCount.textContent = trainFiles.length.toString();
+    }
+
+    trainChoose.onclick = () => trainInput.click();
+    trainInput.onchange = (e) => addTrainFiles(e.target.files);
+
+    ;['dragenter','dragover'].forEach(ev => trainDrop.addEventListener(ev, (e)=>{e.preventDefault(); trainDrop.style.borderColor='var(--accent)';}));
+    ;['dragleave','drop'].forEach(ev => trainDrop.addEventListener(ev, (e)=>{e.preventDefault(); trainDrop.style.borderColor='rgba(255,255,255,.18)';}));
+    trainDrop.addEventListener('drop', (e)=> addTrainFiles(e.dataTransfer.files));
+    trainClear.onclick = clearTrain;
+
+    // ====== FINDER (single file) ======
+    const findInput = document.getElementById('find-input');
+    const findChoose = document.getElementById('find-choose');
+    const findDrop = document.getElementById('find-drop');
+    const findThumbs = document.getElementById('find-thumbs');
+    const findCount = document.getElementById('find-count');
+    const findClear = document.getElementById('find-clear');
+
+    /** @type {File|null} */
+    let findFile = null;
+
+    function setFindFile(file){
+      findFile = file && file.type && file.type.startsWith('image/') ? file : null;
+      renderFind();
+    }
+
+    function renderFind(){
+      findThumbs.innerHTML = '';
+      if (!findFile){ findCount.textContent = '0'; return; }
+      const wrap = document.createElement('div'); wrap.className='thumb';
+      const img = document.createElement('img'); const url = makeURL(findFile); img.src=url; revokeOnImgLoad(img, url);
+      img.title = findFile.name; img.onclick = () => openViewer(url);
+      const bar = document.createElement('div'); bar.className='thumb__bar';
+      const name = document.createElement('div'); name.className='thumb__name'; name.textContent=findFile.name;
+      const x = document.createElement('button'); x.className='thumb__x'; x.textContent='×'; x.title='Удалить'; x.onclick=()=>{ setFindFile(null); };
+      bar.appendChild(name); bar.appendChild(x);
+      wrap.appendChild(img); wrap.appendChild(bar);
+      findThumbs.appendChild(wrap);
+      findCount.textContent = '1';
+    }
+
+    findChoose.onclick = () => findInput.click();
+    findInput.onchange = (e) => setFindFile(e.target.files[0]);
+
+    ;['dragenter','dragover'].forEach(ev => findDrop.addEventListener(ev, (e)=>{e.preventDefault(); findDrop.style.borderColor='var(--accent)';}));
+    ;['dragleave','drop'].forEach(ev => findDrop.addEventListener(ev, (e)=>{e.preventDefault(); findDrop.style.borderColor='rgba(255,255,255,.18)';}));
+    findDrop.addEventListener('drop', (e)=> setFindFile(e.dataTransfer.files[0]));
+    findClear.onclick = () => setFindFile(null);
+
+    // ====== Viewer (full screen) ======
+    const viewer = document.createElement('div'); viewer.className = 'viewer'; viewer.innerHTML = '<img alt="preview">';
+    const viewerImg = viewer.querySelector('img');
+    document.body.appendChild(viewer);
+    function openViewer(url){ viewerImg.src = url; viewer.classList.add('show'); }
+    viewer.addEventListener('click',()=>{ viewer.classList.remove('show'); viewerImg.src=''; });
+  </script>
+</body>
+</html>
