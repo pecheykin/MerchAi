@@ -5,185 +5,166 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MerchAi</title>
   <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Inter, Arial, sans-serif;
-      background: #0b0f19;
-      color: #e7eefc;
-      padding: 20px;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #1e90ff, #00d4ff);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      color: #001221;
-    }
-    .title {
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .card {
-      background: #101628;
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-    }
-    .card h2 {
-      margin-top: 0;
-      font-size: 18px;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,.2);
-      background: #0f1425;
-      color: #fff;
-      margin-bottom: 12px;
-    }
-    .preview {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .preview-item {
-      position: relative;
-    }
-    .preview-item img {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .remove {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: rgba(0,0,0,.6);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal img {
-      max-width: 90%;
-      max-height: 80%;
-    }
+    :root { --bg:#0b0f19; --panel:#101628; --panel2:#0f1425; --text:#e7eefc; --muted:#9bb0d1; --accent:#1e90ff; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial,"Helvetica Neue",sans-serif;padding:20px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+    .logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#1e90ff,#00d4ff);display:grid;place-items:center;color:#001221;font-weight:800}
+    h1{margin:0;font-size:22px}
+
+    .grid{display:grid;gap:20px;grid-template-columns:1fr;}
+    .card{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px}
+    .card h2{margin:0 0 12px;font-size:18px}
+    .muted{color:var(--muted)}
+
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .btn{background:var(--accent);border:none;color:#fff;border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#23314f}
+    .counter{margin-left:auto;color:var(--muted);font-weight:700}
+
+    input[type="file"]{display:none}
+    .field{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:var(--panel2);color:#fff}
+
+    .drop{margin-top:12px;border:1px dashed rgba(255,255,255,.18);border-radius:12px;min-height:160px;display:grid;place-items:center;color:var(--muted);padding:12px;text-align:center}
+    .files{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:14px}
+    .thumb{position:relative;background:var(--panel2);border-radius:10px;overflow:hidden;cursor:pointer}
+    .thumb img{display:block;width:100%;height:100%;object-fit:cover}
+    .x{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-weight:700;cursor:pointer}
+
+    /* modal preview */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px}
+    .modal img{max-width:96vw;max-height:88vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+    .modal .close{position:absolute;top:16px;right:16px;background:#000a;border:0;color:#fff;font-size:26px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer}
+
+    @media (min-width:900px){.grid{grid-template-columns:1fr 1fr}}
   </style>
 </head>
 <body>
-  <div class="header">
+  <header>
     <div class="logo">M</div>
-    <div class="title">MerchAi</div>
-  </div>
+    <h1>MerchAi</h1>
+  </header>
 
-  <div class="card">
-    <h2>Обучение модели</h2>
-    <p>Добавьте изображения товара (от 1 до 10 шт.).</p>
-    <input type="text" id="productName" placeholder="Например: Coca-Cola 0.5">
-    <input type="file" id="fileInput" multiple accept="image/*">
-    <div class="preview" id="preview"></div>
-  </div>
+  <main class="grid">
+    <!-- TRAINING -->
+    <section class="card" id="train-card">
+      <h2>Обучение модели</h2>
+      <p class="muted">Добавьте изображения товара (от 1 до 10). Файлы не отправляются на сервер — только предпросмотр в браузере.</p>
 
+      <label class="muted" for="productName">Наименование товара</label>
+      <input id="productName" class="field" placeholder="Например: Coca‑Cola 0.5" />
+
+      <div class="row" style="margin-top:10px">
+        <label class="btn" for="trainFiles">Выбрать файлы</label>
+        <button class="btn secondary" id="trainClear">Очистить</button>
+        <span class="counter" id="trainCount">0/10</span>
+        <input id="trainFiles" type="file" multiple accept="image/*" />
+      </div>
+
+      <div id="trainDrop" class="drop">или перетащите сюда</div>
+      <div id="trainPreview" class="files"></div>
+    </section>
+
+    <!-- SEARCH -->
+    <section class="card" id="search-card">
+      <h2>Поиск по фотографии</h2>
+      <p class="muted">Введите название и добавьте <b>1</b> фото. Пока без логики, только интерфейс.</p>
+
+      <label class="muted" for="query">Название товара</label>
+      <input id="query" class="field" placeholder="Например: Coca‑Cola 0.5" />
+
+      <div class="row" style="margin-top:10px">
+        <label class="btn" for="searchFile">Выбрать фото</label>
+        <button class="btn secondary" id="searchClear">Удалить фото</button>
+        <span class="counter" id="searchCount">0/1</span>
+        <input id="searchFile" type="file" accept="image/*" />
+      </div>
+
+      <div id="searchDrop" class="drop">или перетащите сюда</div>
+      <div id="searchPreview" class="files"></div>
+    </section>
+  </main>
+
+  <!-- Modal preview -->
   <div class="modal" id="modal">
-    <img id="modalImage" src="" alt="preview">
+    <button class="close" id="modalClose">×</button>
+    <img alt="preview" id="modalImg" />
   </div>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const preview = document.getElementById('preview');
-    const modal = document.getElementById('modal');
-    const modalImage = document.getElementById('modalImage');
-    let files = [];
-    let currentIndex = 0;
+    // helpers
+    const byId = id => document.getElementById(id);
+    function makeThumb(src, onRemove){
+      const div = document.createElement('div');
+      div.className = 'thumb';
+      const img = document.createElement('img');
+      img.src = src; div.appendChild(img);
+      const x = document.createElement('button'); x.className = 'x'; x.textContent = '×';
+      x.onclick = e => { e.stopPropagation(); onRemove(); div.remove(); };
+      div.appendChild(x);
+      div.onclick = () => openModal(src);
+      return div;
+    }
 
-    fileInput.addEventListener('change', (e) => {
-      files = Array.from(e.target.files).slice(0, 10);
-      renderPreviews();
-    });
+    // modal
+    const modal = byId('modal');
+    const modalImg = byId('modalImg');
+    byId('modalClose').onclick = () => modal.style.display = 'none';
+    function openModal(src){ modalImg.src = src; modal.style.display = 'flex'; }
 
-    function renderPreviews() {
-      preview.innerHTML = '';
-      files.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const div = document.createElement('div');
-          div.className = 'preview-item';
+    // TRAIN
+    const train = { files: [] };
+    const trainFiles = byId('trainFiles');
+    const trainPreview = byId('trainPreview');
+    const trainCount = byId('trainCount');
+    const trainDrop = byId('trainDrop');
+    byId('trainClear').onclick = () => { train.files = []; trainPreview.innerHTML=''; trainCount.textContent = '0/10'; };
 
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          img.addEventListener('click', () => openModal(index));
-
-          const btn = document.createElement('button');
-          btn.className = 'remove';
-          btn.textContent = '×';
-          btn.addEventListener('click', () => removeImage(index));
-
-          div.appendChild(img);
-          div.appendChild(btn);
-          preview.appendChild(div);
-        };
-        reader.readAsDataURL(file);
+    function addTrainFiles(list){
+      const add = Array.from(list).slice(0, 10 - train.files.length);
+      add.forEach(file => {
+        train.files.push(file);
+        const r = new FileReader();
+        r.onload = e => trainPreview.appendChild(makeThumb(e.target.result, () => {
+          train.files = train.files.filter(f => f !== file);
+          updateTrainCount();
+        }));
+        r.readAsDataURL(file);
       });
+      updateTrainCount();
     }
+    function updateTrainCount(){ trainCount.textContent = `${train.files.length}/10`; }
 
-    function removeImage(index) {
-      files.splice(index, 1);
-      renderPreviews();
+    trainFiles.onchange = e => addTrainFiles(e.target.files);
+    ;['dragover','drop'].forEach(ev => trainDrop.addEventListener(ev, e => {
+      e.preventDefault();
+      if(ev==='drop') addTrainFiles(e.dataTransfer.files);
+    }));
+
+    // SEARCH
+    const search = { file: null };
+    const searchFile = byId('searchFile');
+    const searchPreview = byId('searchPreview');
+    const searchCount = byId('searchCount');
+    const searchDrop = byId('searchDrop');
+    byId('searchClear').onclick = () => { search.file=null; searchPreview.innerHTML=''; searchCount.textContent='0/1'; };
+
+    function setSearchFile(file){
+      search.file = file; searchPreview.innerHTML = '';
+      const r = new FileReader();
+      r.onload = e => searchPreview.appendChild(makeThumb(e.target.result, () => {
+        search.file = null; searchPreview.innerHTML=''; updateSearchCount();
+      }));
+      r.readAsDataURL(file);
+      updateSearchCount();
     }
+    function updateSearchCount(){ searchCount.textContent = search.file ? '1/1' : '0/1'; }
 
-    function openModal(index) {
-      currentIndex = index;
-      modal.style.display = 'flex';
-      modalImage.src = URL.createObjectURL(files[index]);
-    }
-
-    modal.addEventListener('click', () => {
-      modal.style.display = 'none';
-    });
-
-    window.addEventListener('keydown', (e) => {
-      if (!modal.style.display || modal.style.display === 'none') return;
-      if (e.key === 'ArrowRight') {
-        currentIndex = (currentIndex + 1) % files.length;
-        modalImage.src = URL.createObjectURL(files[currentIndex]);
-      }
-      if (e.key === 'ArrowLeft') {
-        currentIndex = (currentIndex - 1 + files.length) % files.length;
-        modalImage.src = URL.createObjectURL(files[currentIndex]);
-      }
-      if (e.key === 'Escape') {
-        modal.style.display = 'none';
-      }
-    });
+    searchFile.onchange = e => { if(e.target.files[0]) setSearchFile(e.target.files[0]); };
+    ;['dragover','drop'].forEach(ev => searchDrop.addEventListener(ev, e => {
+      e.preventDefault();
+      if(ev==='drop' && e.dataTransfer.files[0]) setSearchFile(e.dataTransfer.files[0]);
+    }));
   </script>
 </body>
 </html>
